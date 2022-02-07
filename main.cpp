@@ -1,8 +1,6 @@
-// #include "parser.h"
 #include "parser.h"
 
-
-/* a prototype of what I want to do */
+/* a skeleton of what I want to do */
 int main()
 {
     XMLDocument doc;
