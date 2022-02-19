@@ -6,6 +6,7 @@ XMLNode* XMLNodeNew(XMLNode* parent)
     node->parent = parent;
     node->tag = nullptr;
     node->innerText = nullptr;
+    XMLAttributeListInit(&node->attributes);
     return node;
 }
 
@@ -16,8 +17,26 @@ void XMLNodeFree(XMLNode* node)
         free(node->tag);
     if(node->innerText)
         free(node->innerText);
+    for(int i=0; i < node->attributes.size; i++)
+        XMLAttributeFree(&node->attributes.data[i]);
 }
 
+void XMLAttributeListInit(XMLAttributeList* list)
+{
+    list->heap_size = 1; //number of elements we can put in
+    list->size = 0; //number of elements we have.
+    list->data = (XMLAttribute*) malloc(sizeof(XMLAttribute) * list->heap_size);
+}
+
+void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr);
+{
+    while(list->size >= list->heap_size) 
+    {
+        list->heap_size *= 2;
+        list->data =  (XMLAttribute*) realloc(list->data, sizeof(XMLAttribute) * list->heap_size);
+    }
+    list->data[list->size++] = *attr;
+}
 
 int XMLDocumentLoad(XMLDocument* doc, const char* path)
 {
@@ -64,19 +83,22 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
             if(buff[i+1] == '/')
             {
                 i+=2;
-                while(buff[i] != '>') //continue untill hit >
+                while(buff[i] != '>') //keep building lex untill hit >
                     lex[lexi++] = buff[i++];
                 lex[lexi] = '\0';// put \0 to omplete the str
-                if(!currentNode)
+
+                if(!currentNode) //checking if its the start tag or end
                 {
                     std::cerr << "Already at the root\n ";
                     return false; 
                 }
                 if(strcmp(currentNode->tag, lex))
                 {
-                    std::cerr << "Mismathced tags " << currentNode->tag << "!=" << lex;
+                    std::cerr << "Mismathced tags " << currentNode->tag << "!=" << lex; //currNode tag isnt same as whats in lex
                     return false;
                 }
+		
+		//when done with currNode, move to its parent
                 currentNode = currentNode->parent;
                 i++;
                 continue;
@@ -87,11 +109,60 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                 currentNode = doc->root;
             else   
                 currentNode = XMLNodeNew(currentNode); //creating a newnode with cuuNode as its parent
+            
+            //getting beginning of tag (loop)
             i++;
+
+            XMLAttribute currAttr = {0,0};
             while(buff[i] != '>')
+            {
                 lex[lexi++] = buff[i++];
-            lex[lexi] = '\0'; //completes 1st str inside tag
-            currentNode->tag = strdup(lex); //heap allocating tag's text inside node's tag field
+            // lex[lexi] = '\0'; //completes 1st str inside tag
+            // currentNode->tag = strdup(lex); //heap allocating tag's text inside node's tag field
+
+                //tag name
+                if(buff[i] == ' ' && !currentNode->tag)
+                {
+                    lex[lexi] = '\0';
+                    currentNode->tag = strdup(lex);
+                    lexi = 0;
+                    i++;
+                    continue;
+                }
+
+                //attribute key
+                if(buff[i] == '=')
+                {
+                    lex[lexi] = '\0';
+                    currAttr.key = strdup(lex);
+                    lexi = 0;
+                    continue;
+                }
+
+                //attribute value
+                if(buff[i] == '"')
+                {
+                    if(!currAttr.key)
+                    {
+                        std::cerr << "Value has no key \n";
+                        return false;
+                    }
+
+                    lexi =0;
+                    i++;
+
+                    while(buff[i] != '"')
+                        lex[lexi++] = buff[i++];
+                    lex[lexi] = '\0';
+                    currAttr.value = strdup(lex);
+                    XMLAttributeListAdd(&currentNode->attriutes, &currAttr);
+                    currAttr = {0,0};
+                    lexi = 0;
+                    i++;
+                    continue;
+
+                }
+            }
 
             /*resetting lexer */
             lexi =0;
@@ -114,3 +185,8 @@ void XMLDocumentFree(XMLDocument* doc)
 }
 
 
+void XMLAttributeFree(XMLAttribute* attr)
+{
+    free(attr->key);
+    free(attr->value);
+}
