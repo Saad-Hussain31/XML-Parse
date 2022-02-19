@@ -44,7 +44,7 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
     XMLNode* currentNode = nullptr;
     while(buff[i] != '\0')
     {
-        if(buff[i] == '<')
+        if(buff[i] == '<') //beginning of node
         {
             lex[lexi] = '\0';
             if(lexi > 0)
@@ -62,9 +62,9 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
             if(buff[i+1] == '/')
             {
                 i+=2;
-                while(buff[i] != '>')
+                while(buff[i] != '>') //continue untill hit >
                     lex[lexi++] = buff[i++];
-                lex[lexi] = '\0';
+                lex[lexi] = '\0';// put \0 to omplete the str
                 if(!currentNode)
                 {
                     std::cerr << "Already at the root\n ";
@@ -81,15 +81,15 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
             }
 
 
-            if(!currentNode)
+            if(!currentNode) //set to parent/root when current node is null
                 currentNode = doc->root;
             else   
-                currentNode = XMLNodeNew(currentNode);
+                currentNode = XMLNodeNew(currentNode); //creating a newnode with cuuNode as its parent
             i++;
             while(buff[i] != '>')
                 lex[lexi++] = buff[i++];
-            lex[lexi] = '\0';
-            currentNode->tag = strdup(lex);
+            lex[lexi] = '\0'; //completes 1st str inside tag
+            currentNode->tag = strdup(lex); //heap allocating tag's text inside node's tag field
 
             //resetting lexer
             lexi =0;
