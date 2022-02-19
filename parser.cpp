@@ -47,9 +47,11 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
         if(buff[i] == '<') //beginning of node
         {
             lex[lexi] = '\0';
-            if(lexi > 0)
+
+	    /* setting innerText */
+            if(lexi > 0)//if len is > 0 then there is some text
             {
-                if(!currentNode)
+                if(!currentNode) //if currnode is null then that text is outside tag
                 {
                     std::cout << "Text outside of document\n";
                     return false;
@@ -58,7 +60,7 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                 lexi = 0;
             }
 
-            //End of node
+            /* setting end of node */
             if(buff[i+1] == '/')
             {
                 i+=2;
@@ -80,7 +82,7 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                 continue;
             }
 
-
+	    /* setting currentNode */
             if(!currentNode) //set to parent/root when current node is null
                 currentNode = doc->root;
             else   
@@ -91,12 +93,12 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
             lex[lexi] = '\0'; //completes 1st str inside tag
             currentNode->tag = strdup(lex); //heap allocating tag's text inside node's tag field
 
-            //resetting lexer
+            /*resetting lexer */
             lexi =0;
             i++;
             continue;
         }
-        else
+        else //keep appending from buf to lex
         {
             lex[lexi++] = buff[i++];
         }
