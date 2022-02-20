@@ -10,6 +10,11 @@ XMLNode* XMLNodeNew(XMLNode* parent)
     return node;
 }
 
+void XMLAttributeFree(XMLAttribute* attr)
+{
+    free(attr->key);
+    free(attr->value);
+}
 
 void XMLNodeFree(XMLNode* node)
 {
@@ -21,14 +26,7 @@ void XMLNodeFree(XMLNode* node)
         XMLAttributeFree(&node->attributes.data[i]);
 }
 
-void XMLAttributeListInit(XMLAttributeList* list)
-{
-    list->heap_size = 1; //number of elements we can put in
-    list->size = 0; //number of elements we have.
-    list->data = (XMLAttribute*) malloc(sizeof(XMLAttribute) * list->heap_size);
-}
-
-void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr);
+void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr)
 {
     while(list->size >= list->heap_size) 
     {
@@ -36,6 +34,13 @@ void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr);
         list->data =  (XMLAttribute*) realloc(list->data, sizeof(XMLAttribute) * list->heap_size);
     }
     list->data[list->size++] = *attr;
+}
+
+void XMLAttributeListInit(XMLAttributeList* list)
+{
+    list->heap_size = 1; //number of elements we can put in
+    list->size = 0; //number of elements we have.
+    list->data = (XMLAttribute*) malloc(sizeof(XMLAttribute) * list->heap_size);
 }
 
 int XMLDocumentLoad(XMLDocument* doc, const char* path)
@@ -155,8 +160,9 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                         lex[lexi++] = buff[i++];
                     lex[lexi] = '\0';
                     currAttr.value = strdup(lex);
-                    XMLAttributeListAdd(&currentNode->attriutes, &currAttr);
-                    currAttr = {0,0};
+                    XMLAttributeListAdd(&currentNode->attributes, &currAttr);
+                    currAttr.key = nullptr;
+                    currAttr.value = nullptr;
                     lexi = 0;
                     i++;
                     continue;
@@ -185,8 +191,4 @@ void XMLDocumentFree(XMLDocument* doc)
 }
 
 
-void XMLAttributeFree(XMLAttribute* attr)
-{
-    free(attr->key);
-    free(attr->value);
-}
+
