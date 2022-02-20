@@ -7,6 +7,9 @@ XMLNode* XMLNodeNew(XMLNode* parent)
     node->tag = nullptr;
     node->innerText = nullptr;
     XMLAttributeListInit(&node->attributes);
+    XMLNodeListInit(&node->children);
+    if(parent)
+        XMLNodeList(parent->children, node);//if parent, add itself to children's list
     return node;
 }
 
@@ -42,6 +45,26 @@ void XMLAttributeListInit(XMLAttributeList* list)
     list->size = 0; //number of elements we have.
     list->data = (XMLAttribute*) malloc(sizeof(XMLAttribute) * list->heap_size);
 }
+
+void XMLNodeListInit(XMLNodeList* list)
+{
+    list->heap_size = 1; 
+    list->size = 0;
+    list->data = (XMLNode**) malloc(sizeof(XMLNode*) * list->heap_size);
+
+}
+void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node)
+{
+    while(list->size >= list->heap_size) 
+    {
+        list->heap_size *= 2;
+        list->data =  (XMLNode**) realloc(list->data, sizeof(XMLNode*) * list->heap_size);
+    }
+    list->data[list->size++] = *attr;
+}
+
+
+
 
 int XMLDocumentLoad(XMLDocument* doc, const char* path)
 {

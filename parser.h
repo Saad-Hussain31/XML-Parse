@@ -3,18 +3,6 @@
 #include <iostream>
 #include <string.h>
 
-struct XMLNode
-{
-    char* tag;
-    char* innerText;
-    XMLNode* parent;
-    XMLAttributeList attriutes;
-};
-
-struct XMLDocument
-{
-    XMLNode* root;
-};
 
 struct XMLAttribute
 {
@@ -29,6 +17,31 @@ struct XMLAttributeList
     XMLAttribute* data;
 };
 
+//for nested tags
+struct XMLNodeList
+{
+    int heap_size;
+    int size;
+    struct XMLNodeList** data;
+};
+struct XMLNode
+{
+    char* tag;
+    char* innerText;
+    XMLNode* parent;
+    XMLAttributeList attributes;
+    XMLNodeList children;
+};
+
+struct XMLDocument
+{
+    XMLNode* root;
+};
+
+
+
+
+
 
 XMLNode* XMLNodeNew(XMLNode* parent);
 void XMLNodeFree(XMLNode* node);
@@ -40,6 +53,9 @@ void XMLAttributeFree(XMLAttribute* attr);
 void XMLAttributeListInit(XMLAttributeList* list);
 void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr);
 
+
+void XMLNodeListInit(XMLNodeList* list);
+void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node);
 
 #endif
 
