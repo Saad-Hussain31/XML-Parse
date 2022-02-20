@@ -1,1 +1,8 @@
-<root> I am a root </root>
+<root>
+
+    <inner>
+        <more>I am Saad</more>
+    </inner>
+    <another>This is XML</another>
+
+</root>
