@@ -1,22 +1,63 @@
 #include "parser.h"
 
-XMLNode* XMLNodeNew(XMLNode* parent)
-{
-    XMLNode* node = (XMLNode*) malloc(sizeof(XMLNode));
-    node->parent = parent;
-    node->tag = nullptr;
-    node->innerText = nullptr;
-    XMLAttributeListInit(&node->attributes);
-    XMLNodeListInit(&node->children);
-    if(parent)
-        XMLNodeList(parent->children, node);//if parent, add itself to children's list
-    return node;
-}
 
 void XMLAttributeFree(XMLAttribute* attr)
 {
     free(attr->key);
     free(attr->value);
+}
+
+void XMLAttributeListInit(XMLAttributeList* list)
+{
+    list->heap_size = 1; //number of elements we can put in
+    list->size = 0; //number of elements we have.
+    list->data = (XMLAttribute*) malloc(sizeof(XMLAttribute) * list->heap_size);
+}
+
+//to add attributes to list
+void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr)
+{
+    while(list->size >= list->heap_size) 
+    {
+        list->heap_size *= 2;
+        list->data =  (XMLAttribute*) realloc(list->data, sizeof(XMLAttribute) * list->heap_size);
+    }
+    list->data[list->size++] = *attr;
+}
+
+
+void XMLNodeListInit(XMLNodeList* list)
+{
+    list->heap_size = 1; 
+    list->size = 0;
+    list->data = (XMLNode**) malloc(sizeof(XMLNode*) * list->heap_size);
+
+}
+
+//list of pointers to XMLNode
+void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node)
+{
+    //keep growing the amount of memory available
+    while(list->size >= list->heap_size) 
+    {
+        list->heap_size *= 2;
+        list->data =  (XMLNode**) realloc(list->data, sizeof(XMLNode*) * list->heap_size);
+    }
+    list->data[list->size++] = node;
+}
+
+
+XMLNode* XMLNodeNew(XMLNode* parent)
+{
+    XMLNode* node = (XMLNode*) malloc(sizeof(XMLNode));
+    node->tag = nullptr;
+    node->innerText = nullptr;
+    node->parent = parent;
+    XMLAttributeListInit(&node->attributes);
+    XMLNodeListInit(&node->children);
+    if(parent)
+        XMLNodeListAdd(&parent->children, node);//if parent, add itself to children's list
+    return node;
 }
 
 void XMLNodeFree(XMLNode* node)
@@ -29,41 +70,10 @@ void XMLNodeFree(XMLNode* node)
         XMLAttributeFree(&node->attributes.data[i]);
 }
 
-void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr)
+XMLNode* XMLNodeChild(XMLNode* parent, int index)
 {
-    while(list->size >= list->heap_size) 
-    {
-        list->heap_size *= 2;
-        list->data =  (XMLAttribute*) realloc(list->data, sizeof(XMLAttribute) * list->heap_size);
-    }
-    list->data[list->size++] = *attr;
+    return parent->children.data[index];
 }
-
-void XMLAttributeListInit(XMLAttributeList* list)
-{
-    list->heap_size = 1; //number of elements we can put in
-    list->size = 0; //number of elements we have.
-    list->data = (XMLAttribute*) malloc(sizeof(XMLAttribute) * list->heap_size);
-}
-
-void XMLNodeListInit(XMLNodeList* list)
-{
-    list->heap_size = 1; 
-    list->size = 0;
-    list->data = (XMLNode**) malloc(sizeof(XMLNode*) * list->heap_size);
-
-}
-void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node)
-{
-    while(list->size >= list->heap_size) 
-    {
-        list->heap_size *= 2;
-        list->data =  (XMLNode**) realloc(list->data, sizeof(XMLNode*) * list->heap_size);
-    }
-    list->data[list->size++] = *attr;
-}
-
-
 
 
 int XMLDocumentLoad(XMLDocument* doc, const char* path)
@@ -138,11 +148,11 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
             else   
                 currentNode = XMLNodeNew(currentNode); //creating a newnode with cuuNode as its parent
             
-            //getting beginning of tag (loop)
+            //getting beginning of tag (loop i.e anything between <>)
             i++;
 
             XMLAttribute currAttr = {0,0};
-            while(buff[i] != '>')
+            while(buff[i] != '>') //end of tag symbol 
             {
                 lex[lexi++] = buff[i++];
             // lex[lexi] = '\0'; //completes 1st str inside tag
@@ -170,16 +180,16 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                 //attribute value
                 if(buff[i] == '"')
                 {
-                    if(!currAttr.key)
+                    if(!currAttr.key)//if key is null then quotes are in wrong place.
                     {
                         std::cerr << "Value has no key \n";
                         return false;
                     }
 
                     lexi =0;
-                    i++;
+                    i++;//incr to work with value's string
 
-                    while(buff[i] != '"')
+                    while(buff[i] != '"') //till reach end of value's string
                         lex[lexi++] = buff[i++];
                     lex[lexi] = '\0';
                     currAttr.value = strdup(lex);

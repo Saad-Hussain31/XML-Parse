@@ -10,12 +10,20 @@ struct XMLAttribute
     char* value;
 };
 
+
+void XMLAttributeFree(XMLAttribute* attr);
+
+
 struct XMLAttributeList
 {
     int heap_size;
-    int size;
+    int size; //size of num of eles
     XMLAttribute* data;
 };
+
+void XMLAttributeListInit(XMLAttributeList* list);
+void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr);
+
 
 //for nested tags
 struct XMLNodeList
@@ -24,6 +32,11 @@ struct XMLNodeList
     int size;
     struct XMLNodeList** data;
 };
+
+void XMLNodeListInit(XMLNodeList* list);
+void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node);
+void XMLNodeListFree(XMLNodeList* list);
+
 struct XMLNode
 {
     char* tag;
@@ -33,29 +46,18 @@ struct XMLNode
     XMLNodeList children;
 };
 
+XMLNode* XMLNodeNew(XMLNode* parent);
+void XMLNodeFree(XMLNode* node);
+XMLNode* XMLNodeChild(XMLNode* parent, int index);
+
+
 struct XMLDocument
 {
     XMLNode* root;
 };
 
-
-
-
-
-
-XMLNode* XMLNodeNew(XMLNode* parent);
-void XMLNodeFree(XMLNode* node);
-
 int XMLDocumentLoad(XMLDocument* doc, const char* path);
 void XMLDocumentFree(XMLDocument* doc);
-
-void XMLAttributeFree(XMLAttribute* attr);
-void XMLAttributeListInit(XMLAttributeList* list);
-void XMLAttributeListAdd(XMLAttributeList* list, XMLAttribute* attr);
-
-
-void XMLNodeListInit(XMLNodeList* list);
-void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node);
 
 #endif
 
