@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string.h>
 #include "parser.h"
 
 
@@ -30,28 +32,29 @@ void XMLNodeListInit(XMLNodeList* list)
 {
     list->heap_size = 1; 
     list->size = 0;
-    list->data = (XMLNode**) malloc(sizeof(XMLNode*) * list->heap_size);
+    list->data = (XMLNodeList**) malloc(sizeof(XMLNode*) * list->heap_size);
 
 }
 
 //list of pointers to XMLNode
-void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node)
+void XMLNodeListAdd(XMLNodeList* list, XMLNode* node)
 {
     //keep growing the amount of memory available
     while(list->size >= list->heap_size) 
     {
         list->heap_size *= 2;
-        list->data =  (XMLNode**) realloc(list->data, sizeof(XMLNode*) * list->heap_size);
+        list->data =  (XMLNodeList**) realloc(list->data, sizeof(XMLNode*) * list->heap_size);
     }
-    list->data[list->size++] = node;
+    list->data[list->size++] = (XMLNodeList*)node;
 }
+
 
 
 XMLNode* XMLNodeNew(XMLNode* parent)
 {
     XMLNode* node = (XMLNode*) malloc(sizeof(XMLNode));
-    node->tag = nullptr;
-    node->innerText = nullptr;
+    node->tag = NULL;
+    node->inner_text = NULL;
     node->parent = parent;
     XMLAttributeListInit(&node->attributes);
     XMLNodeListInit(&node->children);
@@ -64,17 +67,16 @@ void XMLNodeFree(XMLNode* node)
 {
     if(node->tag)
         free(node->tag);
-    if(node->innerText)
-        free(node->innerText);
+    if(node->inner_text)
+        free(node->inner_text);
     for(int i=0; i < node->attributes.size; i++)
         XMLAttributeFree(&node->attributes.data[i]);
 }
 
 XMLNode* XMLNodeChild(XMLNode* parent, int index)
 {
-    return parent->children.data[index];
+    return (XMLNode*)parent->children.data[index];
 }
-
 
 int XMLDocumentLoad(XMLDocument* doc, const char* path)
 {
@@ -98,14 +100,14 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
     char lex[256];
     int lexi = 0;
     int i =0;
-    XMLNode* currentNode = nullptr;
+    XMLNode* currentNode = NULL;
     while(buff[i] != '\0')
     {
         if(buff[i] == '<') //beginning of node
         {
             lex[lexi] = '\0';
 
-	    /* setting innerText */
+	    /* setting inner_text */
             if(lexi > 0)//if len is > 0 then there is some text
             {
                 if(!currentNode) //if currnode is null then that text is outside tag
@@ -113,7 +115,7 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                     std::cout << "Text outside of document\n";
                     return false;
                 }
-                currentNode->innerText = strdup(lex);
+                currentNode->inner_text = strdup(lex);
                 lexi = 0;
             }
 
@@ -132,7 +134,7 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                 }
                 if(strcmp(currentNode->tag, lex))
                 {
-                    std::cerr << "Mismathced tags " << currentNode->tag << "!=" << lex; //currNode tag isnt same as whats in lex
+                    fprintf(stderr, "Mismatched tags (%s != %s)\n", currentNode->tag, lex); //currNode tag isnt same as whats in lex
                     return false;
                 }
 		
@@ -194,8 +196,8 @@ int XMLDocumentLoad(XMLDocument* doc, const char* path)
                     lex[lexi] = '\0';
                     currAttr.value = strdup(lex);
                     XMLAttributeListAdd(&currentNode->attributes, &currAttr);
-                    currAttr.key = nullptr;
-                    currAttr.value = nullptr;
+                    currAttr.key = NULL;
+                    currAttr.value = NULL;
                     lexi = 0;
                     i++;
                     continue;
@@ -222,6 +224,3 @@ void XMLDocumentFree(XMLDocument* doc)
 {
     XMLNodeFree(doc->root);
 }
-
-
-

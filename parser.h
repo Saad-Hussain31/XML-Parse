@@ -34,13 +34,14 @@ struct XMLNodeList
 };
 
 void XMLNodeListInit(XMLNodeList* list);
-void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node);
+// void XMLNodeListAdd(XMLNodeListAdd* list, XMLNode* node);
+void XMLNodeListAdd(XMLNodeList* list, struct _XMLNode* node);
 void XMLNodeListFree(XMLNodeList* list);
 
 struct XMLNode
 {
     char* tag;
-    char* innerText;
+    char* inner_text;
     XMLNode* parent;
     XMLAttributeList attributes;
     XMLNodeList children;

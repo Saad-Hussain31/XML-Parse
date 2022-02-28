@@ -1,4 +1,7 @@
 #include "parser.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* a skeleton of what I want to do */
 int main()
@@ -8,7 +11,7 @@ int main()
     {
         /*
         // std::cout << doc.root->tag << ": " <<
-        // doc.root->innerText;
+        // doc.root->inner_text;
         std::cout << "Attributes: \n ";
         XMLNode node = *doc.root;
         for(int i =0; node.attributes.size; i++)
@@ -21,9 +24,11 @@ int main()
         XMLDocumentFree(&doc);
     } */   
         XMLNode* moreNode = XMLNodeChild(XMLNodeChild(doc.root,0),0);
-        printf("%s: %s\n", moreNode->tag, moreNode->innerText);
+        // printf("%s: %s\n", moreNode->tag, moreNode->inner_text);
+        std::cout << moreNode->tag << moreNode->inner_text;
         XMLNode* anotherNode = XMLNodeChild(doc.root,1);
-        printf("%s: %s\n", anotherNode->tag, anotherNode->innerText);
+        // printf("%s: %s\n", anotherNode->tag, anotherNode->inner_text);
+        std::cout << anotherNode->tag << anotherNode->inner_text;
         XMLDocumentFree(&doc);
     }
 
